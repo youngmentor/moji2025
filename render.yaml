@@ -1,0 +1,25 @@
+services:
+  # Backend API Service
+  - type: web
+    name: mojiola25-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+    rootDir: backend
+
+  # Frontend Static Site
+  - type: web
+    name: mojiola25-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
