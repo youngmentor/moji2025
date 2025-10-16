@@ -107,7 +107,6 @@ const Upload = () => {
         }
     };
 
-    // Function to fetch all images from a specific folder in Cloudinary
     const fetchCloudinaryImages = async () => {
         await fetchPhotosFromBackend();
     };
@@ -121,7 +120,6 @@ const Upload = () => {
                 Upload your photos and videos from our special day. Help us capture every moment of joy and celebration!
             </p>
 
-            {/* Drag and Drop Area */}
             <div className="max-w-2xl mx-auto">
                 <div
                     className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 ${dragActive
@@ -225,7 +223,6 @@ const Upload = () => {
                     )}
                 </div>
 
-                {/* Uploaded Files Gallery */}
                 {uploadedFiles.length > 0 && (
                     <div className="mt-8">
                         <div className="flex justify-between items-center mb-4">
@@ -252,7 +249,6 @@ const Upload = () => {
                                             loading="lazy"
                                         />
                                     </div>
-                                    {/* Overlay with info */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
                                         <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                                             <p className="text-sm font-medium truncate">{fileObj.originalName}</p>
@@ -261,7 +257,6 @@ const Upload = () => {
                                                 <p className="text-xs opacity-80">by {fileObj.uploaderInfo.name}</p>
                                             )}
                                         </div>
-                                        {/* Click indicator */}
                                         <div className="absolute top-2 right-2 bg-white/20 rounded-full p-2">
                                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

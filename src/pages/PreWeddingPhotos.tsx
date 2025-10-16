@@ -7,7 +7,6 @@ const PreWeddingPhotos = () => (
             and the love we share as we prepare to become one.
         </p>
 
-        {/* Main Featured Photo */}
         <div className="mb-12">
             <img
                 src="/_MG_7298.jpg"
@@ -16,7 +15,6 @@ const PreWeddingPhotos = () => (
             />
         </div>
 
-        {/* Photo Grid - Mobile First Design */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
             <div className="group cursor-pointer">
                 <img
