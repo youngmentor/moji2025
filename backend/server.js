@@ -9,7 +9,6 @@ require("dotenv").config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -18,14 +17,12 @@ app.use(
 );
 app.use(express.json());
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure Multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
@@ -44,13 +41,11 @@ const upload = multer({
   },
 });
 
-// MongoDB connection
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// Photo Schema
 const photoSchema = new mongoose.Schema({
   originalName: { type: String, required: true },
   cloudinaryUrl: { type: String, required: true },
@@ -66,29 +61,29 @@ const photoSchema = new mongoose.Schema({
 
 const Photo = mongoose.model("Photo", photoSchema);
 
-// Routes
 
-// Health check
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "Wedding backend is running!" });
 });
 
-// Upload photo/video
+app.get("/", (req, res) => {
+  res.json({ status: "OK", message: "Wedding backend is running!" });
+});
+
 app.post("/api/upload", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          resource_type: "auto", // Automatically detect file type
-          folder: "wedding-photos", // Organize in a folder
+          resource_type: "auto",
+          folder: "wedding-photos",
           transformation: [
-            { quality: "auto" }, // Automatic quality optimization
-            { fetch_format: "auto" }, // Automatic format optimization
+            { quality: "auto" }, 
+            { fetch_format: "auto" },
           ],
         },
         (error, result) => {
@@ -99,7 +94,6 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
       uploadStream.end(req.file.buffer);
     });
 
-    // Save to MongoDB
     const photo = new Photo({
       originalName: req.file.originalname,
       cloudinaryUrl: result.secure_url,
@@ -129,7 +123,6 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// Get all photos
 app.get("/api/photos", async (req, res) => {
   try {
     const photos = await Photo.find()
@@ -156,7 +149,6 @@ app.get("/api/photos", async (req, res) => {
   }
 });
 
-// Get photos count
 app.get("/api/photos/count", async (req, res) => {
   try {
     const count = await Photo.countDocuments();
@@ -166,7 +158,6 @@ app.get("/api/photos/count", async (req, res) => {
   }
 });
 
-// Delete photo (optional - for admin use)
 app.delete("/api/photos/:id", async (req, res) => {
   try {
     const photo = await Photo.findById(req.params.id);
@@ -174,10 +165,8 @@ app.delete("/api/photos/:id", async (req, res) => {
       return res.status(404).json({ error: "Photo not found" });
     }
 
-    // Delete from Cloudinary
     await cloudinary.uploader.destroy(photo.cloudinaryPublicId);
 
-    // Delete from MongoDB
     await Photo.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, message: "Photo deleted successfully" });
@@ -187,7 +176,6 @@ app.delete("/api/photos/:id", async (req, res) => {
   }
 });
 
-// Error handling middleware
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {

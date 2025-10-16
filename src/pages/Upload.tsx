@@ -25,7 +25,6 @@ const Upload = () => {
     const [uploaderEmail, setUploaderEmail] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Load photos from backend on component mount
     useEffect(() => {
         fetchPhotosFromBackend();
     }, []);
