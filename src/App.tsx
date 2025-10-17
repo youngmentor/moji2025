@@ -1,6 +1,7 @@
 import Home from './pages/Home';
 import PreWeddingPhotos from './pages/PreWeddingPhotos';
 import Upload from './pages/Upload';
+import WeddingInfo from './pages/WeddingInfo';
 
 function App() {
   return (
@@ -25,7 +26,7 @@ function App() {
         <section id="home" className="min-h-screen py-8">
           <Home />
         </section>
-
+        <WeddingInfo />
         <section id="pre-wedding" className="min-h-screen py-8">
           <PreWeddingPhotos />
         </section>

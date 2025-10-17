@@ -95,6 +95,27 @@ const Home = () => {
                 Celebrating Love • Creating Memories • Building Forever
             </p>
 
+            {/* Wedding Invitation Card */}
+            <div className="max-w-4xl mx-auto mb-16">
+                <div className="bg-gradient-to-b from-rose-50 to-pink-50 rounded-3xl p-8 shadow-xl border border-rose-100">
+                    <h2 className="font-serif text-2xl md:text-3xl font-light mb-6 text-center text-gray-800">
+                        You're
+                        <span className="text-rose-500 italic font-serif font-extralight"> Invited</span>
+                    </h2>
+                    <div className="flex justify-center">
+                        <img
+                            src="/wedding-invitation.jpg"
+                            alt="Wedding Invitation - Mojisola & Olatunji 2025"
+                            className="max-w-full h-auto rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer"
+                            onClick={() => window.open('/wedding-invitation.jpg', '_blank')}
+                        />
+                    </div>
+                    <p className="text-center text-gray-600 mt-4 italic">
+                        Click to view full invitation
+                    </p>
+                </div>
+            </div>
+
             {/* Hero Section */}
             <div className="flex flex-col lg:flex-row gap-8 justify-center items-center mb-16">
                 <img src="/_MG_7298.jpg" alt="Beautiful couple photo" className="rounded-2xl shadow-2xl w-full lg:w-1/3 max-w-md object-cover h-96" />

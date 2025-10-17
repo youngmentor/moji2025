@@ -16,13 +16,14 @@ interface UploadedFile {
 }
 
 const Upload = () => {
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
     const [uploading, setUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [loadingGallery, setLoadingGallery] = useState(false);
     const [uploaderName, setUploaderName] = useState('');
     const [uploaderEmail, setUploaderEmail] = useState('');
+    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -45,8 +46,8 @@ const Upload = () => {
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0] || null;
-        setFile(selectedFile);
+        const selectedFiles = Array.from(e.target.files || []);
+        setFiles(selectedFiles);
     };
 
     const handleDrag = (e: React.DragEvent) => {
@@ -64,8 +65,9 @@ const Upload = () => {
         e.stopPropagation();
         setDragActive(false);
 
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            setFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const droppedFiles = Array.from(e.dataTransfer.files);
+            setFiles(droppedFiles);
         }
     };
 
@@ -74,34 +76,44 @@ const Upload = () => {
     };
 
     const handleUpload = async () => {
-        if (!file) return;
+        if (!files.length) return;
         setUploading(true);
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('uploaderName', uploaderName);
-        formData.append('uploaderEmail', uploaderEmail);
-
         try {
-            const response = await fetch(`${API_BASE_URL}/upload`, {
-                method: 'POST',
-                body: formData,
-            });
+            // Upload files one by one
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('uploaderName', uploaderName);
+                formData.append('uploaderEmail', uploaderEmail);
 
-            const data = await response.json();
+                setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
 
-            if (data.success) {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
+                    method: 'POST',
+                    body: formData,
+                });
 
-                await fetchPhotosFromBackend();
-                setFile(null);
-                setUploaderName('');
-                setUploaderEmail('');
-            } else {
-                throw new Error(data.error || 'Upload failed');
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || `Upload failed for ${file.name}`);
+                }
+
+                setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
             }
+
+            // Refresh the gallery after all uploads
+            await fetchPhotosFromBackend();
+            setFiles([]);
+            setUploaderName('');
+            setUploaderEmail('');
+            setUploadProgress({});
+
         } catch (error) {
-            console.error('Upload failed:', error);
-            alert('Upload failed! Please try again.');
+            console.error('Upload error:', error);
+            alert(`Upload failed: ${error}`);
         } finally {
             setUploading(false);
         }
@@ -124,7 +136,7 @@ const Upload = () => {
                 <div
                     className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-300 ${dragActive
                         ? 'border-pink-400 bg-pink-50'
-                        : file
+                        : files.length > 0
                             ? 'border-green-400 bg-green-50'
                             : 'border-gray-300 bg-gray-50 hover:border-pink-300 hover:bg-pink-25'
                         }`}
@@ -137,11 +149,12 @@ const Upload = () => {
                         ref={inputRef}
                         type="file"
                         accept="image/*,video/*"
+                        multiple
                         onChange={handleFileChange}
                         className="hidden"
                     />
 
-                    {file ? (
+                    {files.length > 0 ? (
                         <div className="space-y-4">
                             <div className="text-green-600">
                                 <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,10 +162,28 @@ const Upload = () => {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-lg font-semibold text-gray-700">{file.name}</p>
-                                <p className="text-sm text-gray-500">
-                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                <p className="text-lg font-semibold text-gray-700">
+                                    {files.length} file{files.length > 1 ? 's' : ''} selected
                                 </p>
+                                <div className="max-h-32 overflow-y-auto space-y-1 mt-2">
+                                    {files.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between bg-white rounded p-2 text-sm">
+                                            <span className="truncate flex-1">{file.name}</span>
+                                            <span className="text-gray-500 ml-2">
+                                                {(file.size / 1024 / 1024).toFixed(2)} MB
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    const newFiles = files.filter((_, i) => i !== index);
+                                                    setFiles(newFiles);
+                                                }}
+                                                className="ml-2 text-red-500 hover:text-red-700"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="space-y-3">
@@ -172,6 +203,29 @@ const Upload = () => {
                                 />
                             </div>
 
+                            {/* Upload Progress Display */}
+                            {uploading && (
+                                <div className="mt-4 space-y-2">
+                                    <h4 className="font-medium text-gray-700">Upload Progress:</h4>
+                                    {files.map((file, index) => (
+                                        <div key={index} className="bg-gray-100 rounded-lg p-3">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-sm font-medium truncate flex-1">{file.name}</span>
+                                                <span className="text-sm text-gray-500">
+                                                    {uploadProgress[file.name] || 0}%
+                                                </span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                                <div
+                                                    className="bg-pink-500 h-2 rounded-full transition-all duration-300"
+                                                    style={{ width: `${uploadProgress[file.name] || 0}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={handleUpload}
@@ -187,14 +241,14 @@ const Upload = () => {
                                             Uploading...
                                         </>
                                     ) : (
-                                        'Upload File'
+                                        `Upload ${files.length} File${files.length > 1 ? 's' : ''}`
                                     )}
                                 </button>
                                 <button
-                                    onClick={() => setFile(null)}
+                                    onClick={() => setFiles([])}
                                     className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                                 >
-                                    Remove
+                                    Clear All
                                 </button>
                             </div>
                         </div>
@@ -216,7 +270,7 @@ const Upload = () => {
                                     </button>
                                 </h3>
                                 <p className="text-gray-500">
-                                    Supports: JPG, PNG, GIF, MP4, MOV (Max 50MB)
+                                    Select multiple files at once! Supports: JPG, PNG, (Max 50MB per file)
                                 </p>
                             </div>
                         </div>
